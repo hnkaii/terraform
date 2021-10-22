@@ -1,0 +1,1 @@
+/Users/dohonghanh/personal_workspace/terraform/vpc-ec2-rds/variables.tf
