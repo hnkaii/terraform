@@ -1,4 +1,4 @@
-# -------------------------- Keypair --------------------------#
+# Keypair
 resource "aws_key_pair" "ec2_kp" {
   key_name   = "${var.tag_name}-kp"
   public_key = file("key/${var.tag_name}-kp.pub")
@@ -9,7 +9,7 @@ resource "aws_key_pair" "ec2_kp" {
 data "template_file" "user_data" {
   template = file("templates/user_data.tpl")
 }
-# -------------------------- EC2 --------------------------#
+# EC2
 resource "aws_instance" "ec2" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.ec2_instance_type
@@ -24,10 +24,9 @@ resource "aws_instance" "ec2" {
   tags = {
     "Name" = "${var.tag_name}-ec2"
   }
-# -------------------------- Install MySQL Client --------------------------#
-  user_data = data.template_file.user_data.rendered
+  user_data = data.template_file.user_data.rendered # Install MySQL Client
 }
-# -------------------------- Elastic IP --------------------------#
+# Elastic IP
 resource "aws_eip" "ec2_eip" {
   instance = aws_instance.ec2.id
   vpc      = true

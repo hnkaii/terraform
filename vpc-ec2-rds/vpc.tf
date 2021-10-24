@@ -1,7 +1,7 @@
-# # #
-#
-# CONFIGURE VPC
-#
+# ------------------------------------------------------------#
+#  VPC
+# ------------------------------------------------------------#
+
 resource "aws_vpc" "tf_vpc" {
     cidr_block = var.vpc_cidr
     instance_tenancy = "default"
@@ -11,10 +11,8 @@ resource "aws_vpc" "tf_vpc" {
       "Name" = "${var.tag_name}-vpc"
     }
 }
-# # #
-#
-# CONFIGURE SUBNET
-#
+# Subnets 
+
 resource "aws_subnet" "public_subnet_1a" {
     vpc_id = aws_vpc.tf_vpc.id
     cidr_block = var.public_subnet_1a
@@ -40,20 +38,16 @@ resource "aws_subnet" "private-subnet-1c" {
       "Name" = "${var.tag_name}-private-subnet-1c"
     }
 }
-# # #
-#
-# CONFIGURE INTERNET GATEWAY
-#
+# Internet Gateway 
+
 resource "aws_internet_gateway" "igw" {
     vpc_id = aws_vpc.tf_vpc.id
     tags = {
       "Name" = "${var.tag_name}-igw"
     }
 }
-# # #
-#
-# CONFIGURE ROUTE TABLE
-#
+# Route Table 
+
 resource "aws_route_table" "public_route_table" {
     vpc_id = aws_vpc.tf_vpc.id
     route = [ {
@@ -68,10 +62,8 @@ resource "aws_route_table_association" "public-route-table-association" {
     route_table_id = aws_route_table.public_route_table.id
     subnet_id = aws_subnet.public_subnet_1a.id
 }
-# # #
-#
-# CONFIGURE SECURITY GROUP
-#
+# Security Groups (SG) on EC2
+
 resource "aws_security_group" "ec2_sg" {
     name = "ec2_sg"
     description = "SG on EC2 instance"
@@ -111,3 +103,27 @@ resource "aws_security_group_rule" "allow_outbound" {
     tcp = "-1"
     security_group_id = aws_security_group.ec2_sg.id
 }
+
+# Security Groups (SG) on RDS
+resource "aws_security_group" "db_sg" {
+  name        = "${var.tag_name}-db-sg"
+  description = "Security Group on DB instance"
+  vpc_id      = aws_vpc.tf_vpc.id
+}
+resource "aws_security_group_rule" "allowed_port" {
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.ec2_sg.id
+  security_group_id        = aws_security_group.db_sg.id
+}
+resource "aws_db_subnet_group" "db_sng" {
+  name        = "${var.tag_name}-db_subnet-group"
+  description = "DB subnet group on main vpc"
+  subnet_ids  = [aws_subnet.private_subnet_1a.id, aws_subnet.private_subnet_1c.id]
+  tags = {
+    "Name" = "${var.tag_name}-db-subnet"
+  }
+}
+
