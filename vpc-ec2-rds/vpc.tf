@@ -126,4 +126,3 @@ resource "aws_db_subnet_group" "db_sng" {
     "Name" = "${var.tag_name}-db-subnet"
   }
 }
-
